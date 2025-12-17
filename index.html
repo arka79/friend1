@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You, My Friend</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #4cc9f0;
+            --bg: #03045e;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            background: var(--bg);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .story-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; /* Smoother swipe on iOS/Android */
+        }
+
+        .story-container::-webkit-scrollbar { display: none; }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .intro-slide h1 { font-size: 10vw; font-weight: 800; line-height: 1; }
+
+        .glass-card {
+            width: 90%;
+            max-width: 400px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card img { width: 100%; border-radius: 20px; margin-bottom: 20px; pointer-events: none; }
+
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--accent), #7209b7);
+            z-index: 1000;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        #entry-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease;
+        }
+
+        .btn {
+            background: var(--accent); color: white; border: none;
+            padding: 18px 45px; border-radius: 50px; font-weight: bold;
+            font-family: 'Poppins'; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(76, 201, 240, 0.4);
+        }
+
+        @keyframes bounceX { 0%, 100% {transform: translateX(0);} 50% {transform: translateX(15px);} }
+        .swipe-hint { color: var(--accent); margin-top: 20px; animation: bounceX 2s infinite; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="entry-overlay">
+        <h2 style="margin-bottom: 30px; font-weight: 300;">A little something for you...</h2>
+        <button class="btn" onclick="startStory()">OPEN IT</button>
+    </div>
+
+    <div class="progress-bar" id="progress"></div>
+
+    <div class="story-container" id="slider">
+        <section class="slide">
+            <p style="letter-spacing: 5px; opacity: 0.6; font-size: 0.8rem;">VIBE CHECK</p>
+            <h1>You're <br><span style="color: var(--accent);">Legendary</span></h1>
+            <div class="swipe-hint">Swipe to see why ➔</div>
+        </section>
+
+        <section class="slide">
+            <div class="glass-card">
+                <img src="photo1.jpg" alt="Memory">
+                <p style="font-weight: 300;">"Thanks for always having my back. You're the kind of person everyone needs in their life."</p>
+            </div>
+            <audio id="audio1" src="vibe2.mp3" preload="auto" loop></audio>
+        </section>
+
+        <section class="slide">
+            <div class="glass-card">
+                <img src="photo2.jpg" alt="Memory">
+                <p style="font-weight: 300;">"The world is just better when we're hanging out. Keep being you."</p>
+            </div>
+            <audio id="audio2" src="vibe1.mp3" preload="auto" loop></audio>
+        </section>
+
+        <section class="slide">
+            <h2 style="color: var(--accent); font-size: 2rem;">Stay Real.</h2>
+            <p style="padding: 0 40px; font-weight: 300; opacity: 0.8;">You're doing better than you think. Keep moving forward.</p>
+            <div style="font-size: 3rem; margin-top: 20px;">🔥</div>
+        </section>
+    </div>
+
+    <script>
+        const slider = document.getElementById('slider');
+        const progressBar = document.getElementById('progress');
+        const audios = [document.getElementById('audio1'), document.getElementById('audio2')];
+
+        function startStory() {
+            // Browsers need a "Resume" on the AudioContext or a play() call during a click
+            audios.forEach(a => { a.play(); a.pause(); }); 
+            
+            document.getElementById('entry-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('entry-overlay').style.display = 'none';
+            }, 800);
+        }
+
+        slider.addEventListener('scroll', () => {
+            const scrollLeft = slider.scrollLeft;
+            const width = window.innerWidth;
+            
+            // Fixed Progress Bar Logic: Calculated against total scrollable width
+            const maxScroll = slider.scrollWidth - width;
+            const progress = (scrollLeft / maxScroll) * 100;
+            progressBar.style.width = progress + '%';
+
+            // Precise Audio Logic
+            // Slide 2 is at scrollLeft = width
+            if (scrollLeft >= width * 0.5 && scrollLeft < width * 1.5) {
+                playIndex(0);
+            } 
+            // Slide 3 is at scrollLeft = width * 2
+            else if (scrollLeft >= width * 1.5 && scrollLeft < width * 2.5) {
+                playIndex(1);
+            } 
+            else {
+                stopAll();
+            }
+        });
+
+        function playIndex(index) {
+            audios.forEach((audio, i) => {
+                if (i === index) {
+                    if (audio.paused) {
+                        audio.play().catch(e => console.log("Play blocked"));
+                        vibeEffect();
+                    }
+                } else {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            });
+        }
+
+        function stopAll() {
+            audios.forEach(a => {
+                a.pause();
+                a.currentTime = 0;
+            });
+        }
+
+        function vibeEffect() {
+            if ("vibrate" in navigator) navigator.vibrate(50);
+            confetti({
+                particleCount: 15,
+                spread: 40,
+                origin: { y: 0.7 },
+                colors: ['#4cc9f0', '#ffffff']
+            });
+        }
+
+        // Prevent Right Click
+        window.oncontextmenu = (e) => e.preventDefault();
+    </script>
+</body>
+</html>
